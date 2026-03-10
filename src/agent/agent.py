@@ -1,4 +1,5 @@
 from google.adk.agents import Agent
+from google.adk.models import LiteLlm
 
 from .tools import (
     analyze_trend,
@@ -37,7 +38,7 @@ SYSTEM_PROMPT = """당신은 주식 기술적 분석 전문가 AI입니다.
 def create_agent() -> Agent:
     """CH AI Stock ADK Agent를 생성한다."""
     return Agent(
-        model="gemini-2.0-flash",
+        model=LiteLlm(model="anthropic/claude-opus-4-5"),
         name="ch_ai_stock_agent",
         description="미국/한국 주식 기술적 분석 및 Trend Following 전략 신호 제공",
         instruction=SYSTEM_PROMPT,

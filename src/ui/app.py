@@ -105,7 +105,8 @@ def on_send(e: me.ClickEvent):
     except Exception as ex:
         response = f"오류가 발생했습니다: {ex}"
 
-    state.messages[-1] = ChatMessage(role="assistant", content=response)
+    state.messages.pop()
+    state.messages.append(ChatMessage(role="assistant", content=response))
     state.is_loading = False
 
 
@@ -126,7 +127,8 @@ def on_key_down(e: me.InputEnterEvent):
     except Exception as ex:
         response = f"오류가 발생했습니다: {ex}"
 
-    state.messages[-1] = ChatMessage(role="assistant", content=response)
+    state.messages.pop()
+    state.messages.append(ChatMessage(role="assistant", content=response))
     state.is_loading = False
 
 
@@ -166,7 +168,11 @@ def chat_bubble(message: ChatMessage):
 # 페이지
 # ---------------------------------------------------------------------------
 
-@me.page(path="/", title="CH AI Stock")
+@me.page(
+    path="/",
+    title="CH AI Stock",
+    security_policy=me.SecurityPolicy(dangerously_disable_trusted_types=True),
+)
 def main_page():
     state = me.state(AppState)
 
