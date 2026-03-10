@@ -63,6 +63,20 @@ uv run adk web src
 
 `http://localhost:8000` 접속 후 `agent` 선택.
 
+### 터미널에서 직접 질의 (선택)
+
+Mesop UI 없이 터미널에서 Agent에 질문할 수 있습니다.
+
+```bash
+export ANTHROPIC_API_KEY=your_key_here
+
+# 단일 질문
+uv run python scripts/query_agent.py "애플(AAPL) RSI 전략 신호 알려줘"
+
+# 대화형 모드
+uv run python scripts/query_agent.py
+```
+
 ## 예시 질문
 
 - `AAPL을 MA 크로스오버 전략으로 분석해줘`
