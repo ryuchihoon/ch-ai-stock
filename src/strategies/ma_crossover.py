@@ -90,10 +90,10 @@ class MACrossoverStrategy(BaseStrategy):
             reason=reason,
             chart_data=chart_data,
             indicators={
-                f"sma_{short_w}": round(short_now, 2),
-                f"sma_{long_w}": round(long_now, 2),
-                "golden_cross": crossed_up,
-                "dead_cross": crossed_down,
+                f"sma_{short_w}": round(float(short_now), 2),
+                f"sma_{long_w}": round(float(long_now), 2),
+                "golden_cross": bool(crossed_up),
+                "dead_cross": bool(crossed_down),
             },
         )
 
