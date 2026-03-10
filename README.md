@@ -1,5 +1,7 @@
 # CH AI Stock
 
+[![Tests](https://github.com/ryuchihoon/ch-ai-stock/actions/workflows/test.yml/badge.svg)](https://github.com/ryuchihoon/ch-ai-stock/actions/workflows/test.yml)
+
 AI Agent 기반 주식 기술적 분석 도우미. 미국/한국 주식의 Trend Following 전략 신호를 자연어로 질의할 수 있습니다.
 
 > **주의**: 본 프로젝트는 분석/추천 목적이며, 실거래 기능은 포함하지 않습니다. 모든 분석 결과는 참고용이며 투자 권유가 아닙니다.
