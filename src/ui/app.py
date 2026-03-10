@@ -108,6 +108,7 @@ def on_send(e: me.ClickEvent):
     state.messages.pop()
     state.messages.append(ChatMessage(role="assistant", content=response))
     state.is_loading = False
+    yield  # 최종 상태를 클라이언트로 전송
 
 
 def on_key_down(e: me.InputEnterEvent):
@@ -130,6 +131,7 @@ def on_key_down(e: me.InputEnterEvent):
     state.messages.pop()
     state.messages.append(ChatMessage(role="assistant", content=response))
     state.is_loading = False
+    yield  # 최종 상태를 클라이언트로 전송
 
 
 # ---------------------------------------------------------------------------
