@@ -16,5 +16,8 @@ build/
 .vscode/
 .idea/
 
+# ADK 런타임 파일
+src/agent/.adk/
+
 # OS
 .DS_Store
