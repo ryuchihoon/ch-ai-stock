@@ -15,14 +15,14 @@ AI Agent 기반 주식 거래 도우미. 미국/한국 주식에 대해 Trend Fo
 
 | 역할 | 선택 | 비고 |
 |------|------|------|
-| Agent Framework | Google ADK | Gemini 모델 사용 |
-| LLM | Gemini (via ADK) | |
+| Agent Framework | Google ADK | LiteLLM으로 모델 연동 |
+| LLM | Claude (Anthropic, via LiteLLM) | claude-opus-4-5 |
 | UI | Mesop | ADK 공식 연동 지원 |
 | US 주식 데이터 | yfinance | 일봉 OHLCV |
-| KR 주식 데이터 | pykrx + FinanceDataReader | 일봉 OHLCV |
-| 기술적 지표 | pandas-ta | TA-Lib 대체, 설치 간편 |
+| KR 주식 데이터 | FinanceDataReader | pykrx는 Python 3.14 미지원으로 제외 |
+| 기술적 지표 | ta | pandas-ta→numba→llvmlite가 Python 3.14 미지원으로 대체 |
 | 차트 | Plotly | Mesop 내 렌더링 |
-| 언어 | Python 3.11+ | |
+| 언어 | Python 3.12+ | |
 | 패키지 관리 | uv | |
 
 ---
@@ -38,7 +38,7 @@ AI Agent 기반 주식 거래 도우미. 미국/한국 주식에 대해 Trend Fo
 └─────────────────────┬────────────────────────────┘
                       │
 ┌─────────────────────▼────────────────────────────┐
-│           Google ADK Agent (Gemini)              │
+│      Google ADK Agent (Claude via LiteLLM)       │
 │                                                  │
 │  System Prompt: 주식 분석 전문가 페르소나          │
 │                                                  │
@@ -57,8 +57,8 @@ AI Agent 기반 주식 거래 도우미. 미국/한국 주식에 대해 Trend Fo
 │  ├── USStock    │   │  ├── MACrossover          │
 │  │   (yfinance) │   │  ├── RSI                  │
 │  └── KRStock    │   │  ├── DonchianChannel (P2) │
-│      (pykrx,    │   │  ├── ATRTrend      (P2)   │
-│       FDR)      │   │  └── Turtle        (P2)   │
+│      (FDR)      │   │  ├── ATRTrend      (P2)   │
+│                 │   │  └── Turtle        (P2)   │
 └─────────────────┘   └───────────────────────────┘
 ```
 
@@ -82,16 +82,16 @@ ch-ai-stock/
 │   │   ├── __init__.py
 │   │   ├── base.py           # DataSource 추상 클래스
 │   │   ├── us.py             # USStockDataSource (yfinance)
-│   │   └── kr.py             # KRStockDataSource (pykrx + FDR)
+│   │   └── kr.py             # KRStockDataSource (FinanceDataReader)
 │   ├── strategies/
 │   │   ├── __init__.py
 │   │   ├── base.py           # BaseStrategy, StrategyResult
 │   │   ├── registry.py       # StrategyRegistry (플러그인 관리)
-│   │   ├── ma_crossover.py   # Phase 1
-│   │   ├── rsi.py            # Phase 1
-│   │   ├── donchian.py       # Phase 2
-│   │   ├── atr_trend.py      # Phase 2
-│   │   └── turtle.py         # Phase 2
+│   │   ├── ma_crossover.py   # Phase 1 (구현 완료)
+│   │   ├── rsi.py            # Phase 1 (구현 완료)
+│   │   ├── donchian.py       # Phase 2 (예정)
+│   │   ├── atr_trend.py      # Phase 2 (예정)
+│   │   └── turtle.py         # Phase 2 (예정)
 │   └── ui/
 │       ├── __init__.py
 │       └── app.py            # Mesop 앱
@@ -258,11 +258,11 @@ def search_stock(query: str, market: str = "all") -> list[dict]:
     returns: 매칭 종목 목록
     """
 
-def compare_stocks(tickers: list[str], metric: str = "trend",
+def compare_stocks(tickers: list[str], metric: str = "performance",
                    period: str = "1y") -> dict:
     """
-    metric: 'trend' | 'performance' | 'volatility'
-    returns: 비교 분석 결과 + 차트
+    metric: 'performance' | 'volatility'
+    returns: 비교 분석 결과
     """
 ```
 
@@ -297,13 +297,13 @@ def compare_stocks(tickers: list[str], metric: str = "trend",
 
 ## 9. 개발 단계
 
-### Phase 1 - 기반 구축
-- [ ] 프로젝트 초기 설정 (uv, pyproject.toml)
-- [ ] Data Layer: USStockDataSource, KRStockDataSource
-- [ ] Strategy Engine: BaseStrategy, StrategyRegistry
-- [ ] 전략 구현: MACrossoverStrategy, RSIStrategy
-- [ ] ADK Agent + Tools 연동
-- [ ] Mesop UI 기본 채팅 인터페이스
+### Phase 1 - 기반 구축 ✅ 완료
+- [x] 프로젝트 초기 설정 (uv, pyproject.toml)
+- [x] Data Layer: USStockDataSource, KRStockDataSource
+- [x] Strategy Engine: BaseStrategy, StrategyRegistry
+- [x] 전략 구현: MACrossoverStrategy, RSIStrategy
+- [x] ADK Agent + Tools 연동 (Claude via LiteLLM)
+- [x] Mesop UI 기본 채팅 인터페이스
 - [ ] 단위 테스트
 
 ### Phase 2 - 전략 확장
@@ -322,7 +322,9 @@ def compare_stocks(tickers: list[str], metric: str = "trend",
 
 ## 10. 확정 사항
 
-- [x] Gemini 모델: `gemini-2.0-flash` (테스트 단계, 속도/비용 우선)
-- [x] KR 주식 데이터: `pykrx` (OHLCV) + `FinanceDataReader` (검색/메타데이터) 병용
-- [ ] 차트를 Mesop 내에서 렌더링하는 구체적 방법 → 코딩 단계에서 실험
-- [ ] ADK Agent의 스트리밍 응답을 Mesop에서 처리하는 방식 → 코딩 단계에서 실험
+- [x] LLM: `claude-opus-4-5` (Anthropic, Google ADK + LiteLLM 경유)
+- [x] KR 주식 데이터: `FinanceDataReader` 단독 사용 (pykrx는 Python 3.14 미지원)
+- [x] 기술적 지표 라이브러리: `ta` (pandas-ta는 Python 3.14 미지원)
+- [x] Python 3.12+ 요구 (llvmlite 등 의존성 이슈로 3.11 제외)
+- [ ] 차트를 Mesop 내에서 렌더링하는 구체적 방법 → Phase 2에서 구현 예정
+- [ ] ADK Agent의 스트리밍 응답을 Mesop에서 처리하는 방식 → Phase 2에서 구현 예정
