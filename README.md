@@ -77,6 +77,21 @@ uv run python scripts/query_agent.py "애플(AAPL) RSI 전략 신호 알려줘"
 uv run python scripts/query_agent.py
 ```
 
+### A2A 서버로 실행 (선택)
+
+상위 Orchestrator Agent가 이 Agent를 sub-agent로 호출할 수 있도록 A2A 프로토콜 서버를 실행합니다.
+Agent Card는 tool docstring에서 자동 생성되며 별도 JSON 파일이 필요 없습니다.
+
+```bash
+export ANTHROPIC_API_KEY=your_key_here
+
+# A2A 서버 실행 (포트 8001)
+uv run uvicorn src.agent.a2a_server:app --host localhost --port 8001
+
+# Agent Card 확인
+curl http://localhost:8001/.well-known/agent-card.json
+```
+
 ## 예시 질문
 
 - `AAPL을 MA 크로스오버 전략으로 분석해줘`

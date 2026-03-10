@@ -16,6 +16,7 @@ dependencies = [
     "setuptools>=70.0.0",
     "litellm>=1.75.5",
     "anthropic>=0.43.0",
+    "a2a-sdk>=0.3.24",
 ]
 
 [build-system]
