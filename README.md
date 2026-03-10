@@ -93,6 +93,20 @@ docs/
 └── design.md             # 설계 문서
 ```
 
+## 테스트
+
+```bash
+uv run pytest tests/ -v
+```
+
+네트워크 없이 실행 가능한 단위 테스트 74개 (데이터 소스 모킹):
+
+| 파일 | 대상 |
+|------|------|
+| `tests/test_data.py` | USStockDataSource, KRStockDataSource |
+| `tests/test_strategies.py` | MACrossoverStrategy, RSIStrategy, StrategyRegistry |
+| `tests/test_tools.py` | Agent Tools (get_stock_data, analyze_trend 등) |
+
 ## 전략 추가 방법
 
 1. `src/strategies/`에 새 전략 파일 작성 (`BaseStrategy` 상속)

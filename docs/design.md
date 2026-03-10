@@ -295,7 +295,30 @@ def compare_stocks(tickers: list[str], metric: str = "performance",
 
 ---
 
-## 9. 개발 단계
+## 9. 테스트 설계
+
+### 테스트 전략
+- 네트워크 의존성 없는 순수 단위 테스트 (yfinance, FinanceDataReader, ADK 모두 모킹)
+- 합성 OHLCV 데이터로 전략 로직 검증
+- **pydantic 직렬화 안전성**: indicators dict의 numpy 타입 → Python 네이티브 타입 변환 검증
+
+### 테스트 파일 구성
+
+| 파일 | 대상 | 주요 검증 항목 |
+|------|------|--------------|
+| `tests/test_data.py` | `USStockDataSource`, `KRStockDataSource` | 컬럼명 정규화, tz-naive 인덱스, yfinance MultiIndex 처리, 빈 데이터 예외 |
+| `tests/test_strategies.py` | `MACrossoverStrategy`, `RSIStrategy`, `StrategyRegistry` | 신호 유효성(BUY/SELL/HOLD), strength 범위(0~1), numpy → Python 타입 변환, 데이터 부족 예외 |
+| `tests/test_tools.py` | Agent Tools 전체 | 반환 dict 구조, Python 네이티브 타입, chart_data 미포함, 에러 응답 형식 |
+
+### 실행
+
+```bash
+uv run pytest tests/ -v
+```
+
+---
+
+## 10. 개발 단계
 
 ### Phase 1 - 기반 구축 ✅ 완료
 - [x] 프로젝트 초기 설정 (uv, pyproject.toml)
@@ -304,7 +327,7 @@ def compare_stocks(tickers: list[str], metric: str = "performance",
 - [x] 전략 구현: MACrossoverStrategy, RSIStrategy
 - [x] ADK Agent + Tools 연동 (Claude via LiteLLM)
 - [x] Mesop UI 기본 채팅 인터페이스
-- [ ] 단위 테스트
+- [x] 단위 테스트 (pytest, 74개)
 
 ### Phase 2 - 전략 확장
 - [ ] DonchianChannelStrategy
