@@ -5,10 +5,20 @@ CH AI Stock - Mesop UI
 """
 
 import asyncio
+import logging
+import sys
 from dataclasses import dataclass, field
 
 from dotenv import load_dotenv
 load_dotenv()  # ADK/Gemini 초기화 전에 .env 로드
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] %(levelname)s %(message)s",
+    stream=sys.stdout,
+    force=True,
+)
+log = logging.getLogger("ch_ai_stock")
 
 import mesop as me
 from google.adk.runners import InMemoryRunner
@@ -66,16 +76,21 @@ def _call_agent(user_input: str) -> str:
     )
 
     response_text = ""
-    for event in _runner.run(
-        user_id=_USER_ID,
-        session_id=_SESSION_ID,
-        new_message=content,
-    ):
-        if event.is_final_response() and event.content and event.content.parts:
-            for part in event.content.parts:
-                if part.text:
-                    response_text += part.text
+    try:
+        for event in _runner.run(
+            user_id=_USER_ID,
+            session_id=_SESSION_ID,
+            new_message=content,
+        ):
+            if event.is_final_response() and event.content and event.content.parts:
+                for part in event.content.parts:
+                    if part.text:
+                        response_text += part.text
+    except Exception:
+        log.exception("[agent] 실행 중 오류 발생 (입력: %r)", user_input[:60])
+        raise
 
+    log.info("[agent] 완료 | 입력: %r | 응답: %d자", user_input[:40], len(response_text))
     return response_text or "응답을 생성하지 못했습니다."
 
 
