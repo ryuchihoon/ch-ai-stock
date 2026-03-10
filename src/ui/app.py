@@ -7,7 +7,7 @@ CH AI Stock - Mesop UI
 import asyncio
 import logging
 import sys
-from dataclasses import dataclass, field
+from dataclasses import field
 
 from dotenv import load_dotenv
 load_dotenv()  # ADK/Gemini 초기화 전에 .env 로드
@@ -50,16 +50,13 @@ asyncio.run(
 # 상태
 # ---------------------------------------------------------------------------
 
-@dataclass
-class ChatMessage:
-    role: str        # "user" | "assistant"
-    content: str
-    is_loading: bool = False
-
-
 @me.stateclass
 class AppState:
-    messages: list[ChatMessage] = field(default_factory=list)
+    # Python 3.14에서 Mesop이 중첩 dataclass의 __annotations__를 인스턴스에서
+    # 조회하지 못하는 호환성 문제로, primitive 타입 병렬 리스트로 관리
+    msg_roles: list[str] = field(default_factory=list)      # "user" | "assistant"
+    msg_contents: list[str] = field(default_factory=list)
+    msg_loading: list[bool] = field(default_factory=list)
     input_text: str = ""
     is_loading: bool = False
 
@@ -103,14 +100,20 @@ def on_input_change(e: me.InputEvent):
     state.input_text = e.value
 
 
+def _append_msg(state: AppState, role: str, content: str, loading: bool = False):
+    state.msg_roles.append(role)
+    state.msg_contents.append(content)
+    state.msg_loading.append(loading)
+
+
 def on_send(e: me.ClickEvent):
     state = me.state(AppState)
     user_text = state.input_text.strip()
     if not user_text or state.is_loading:
         return
 
-    state.messages.append(ChatMessage(role="user", content=user_text))
-    state.messages.append(ChatMessage(role="assistant", content="", is_loading=True))
+    _append_msg(state, "user", user_text)
+    _append_msg(state, "assistant", "", loading=True)
     state.input_text = ""
     state.is_loading = True
     yield
@@ -120,8 +123,8 @@ def on_send(e: me.ClickEvent):
     except Exception as ex:
         response = f"오류가 발생했습니다: {ex}"
 
-    state.messages.pop()
-    state.messages.append(ChatMessage(role="assistant", content=response))
+    state.msg_contents[-1] = response
+    state.msg_loading[-1] = False
     state.is_loading = False
     yield  # 최종 상태를 클라이언트로 전송
 
@@ -132,8 +135,8 @@ def on_key_down(e: me.InputEnterEvent):
     if not user_text or state.is_loading:
         return
 
-    state.messages.append(ChatMessage(role="user", content=user_text))
-    state.messages.append(ChatMessage(role="assistant", content="", is_loading=True))
+    _append_msg(state, "user", user_text)
+    _append_msg(state, "assistant", "", loading=True)
     state.input_text = ""
     state.is_loading = True
     yield
@@ -143,8 +146,8 @@ def on_key_down(e: me.InputEnterEvent):
     except Exception as ex:
         response = f"오류가 발생했습니다: {ex}"
 
-    state.messages.pop()
-    state.messages.append(ChatMessage(role="assistant", content=response))
+    state.msg_contents[-1] = response
+    state.msg_loading[-1] = False
     state.is_loading = False
     yield  # 최종 상태를 클라이언트로 전송
 
@@ -158,8 +161,8 @@ def signal_color(signal: str) -> str:
 
 
 @me.component
-def chat_bubble(message: ChatMessage):
-    is_user = message.role == "user"
+def chat_bubble(role: str, content: str, is_loading: bool):
+    is_user = role == "user"
     with me.box(style=me.Style(
         display="flex",
         justify_content="flex-end" if is_user else "flex-start",
@@ -175,10 +178,10 @@ def chat_bubble(message: ChatMessage):
             line_height="1.6",
             white_space="pre-wrap",
         )):
-            if message.is_loading:
+            if is_loading:
                 me.text("분석 중...", style=me.Style(color="#90A4AE", font_style="italic"))
             else:
-                me.markdown(message.content)
+                me.markdown(content)
 
 
 # ---------------------------------------------------------------------------
@@ -224,11 +227,11 @@ def main_page():
             display="flex",
             flex_direction="column",
         )):
-            if not state.messages:
+            if not state.msg_roles:
                 _welcome_message()
             else:
-                for msg in state.messages:
-                    chat_bubble(message=msg)
+                for role, content, loading in zip(state.msg_roles, state.msg_contents, state.msg_loading):
+                    chat_bubble(role=role, content=content, is_loading=loading)
 
         # 입력 영역
         with me.box(style=me.Style(
